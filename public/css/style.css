@@ -1,0 +1,7 @@
+form div ul li {
+    color: #AA3333;
+}
+
+div.row div.col div ul li {
+    color: #AA3333;
+}

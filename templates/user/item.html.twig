@@ -1,0 +1,27 @@
+{% extends 'layout.html.twig' %}
+{% block content %}
+    <a class="btn btn-secondary float-right" href="{{ path('admin_user_list') }}"><i class="fa fa-arrow-left"></i> Назад</a>
+
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            {% if action =='add' %}
+                <h1 class="mt-5">Добавить нового пользователя</h1>
+                <p class="lead"></p>
+            {% elseif action == 'edit' %}
+                <h1 class="mt-5">Редактировать пользователя</h1>
+                <p class="lead"></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            {{ form_start(form) }}
+            {{ form_widget(form) }}
+            {{ form_end(form) }}
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+
+{% endblock content %}

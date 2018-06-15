@@ -1,0 +1,197 @@
+{% extends 'layout.html.twig' %}
+{% block content %}
+
+    <a class="btn btn-secondary float-right" href="{{ path('invoice_create') }}"><i class="fa fa-plus"></i> Добавить</a>
+
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <h1 class="mt-5">Счета</h1>
+            <p class="lead"></p>
+        </div>
+    </div>
+
+    {% if filter_form %}
+        <div class="row">
+            <div class="col">
+                <a class="btn btn-primary" id="filter_link" href="#"><i class="fa fa-filter"></i> Фильтр</a>
+            </div>
+        </div>
+        <br>
+        <div class="row" id="filter">
+
+            <div class="col-sm-1">{{ form_start(filter_form) }}</div>
+            <div class="col">{{ form_row(filter_form.date_from_created_at) }}</div>
+            <div class="col">{{ form_row(filter_form.date_to_created_at) }}</div>
+            <div class="col">{{ form_row(filter_form.date_from_paid_at) }}</div>
+            <div class="col">{{ form_row(filter_form.date_to_paid_at) }}</div>
+            <div class="col">{{ form_row(filter_form.status) }}</div>
+            <div class="col">{{ form_row(filter_form.user) }}</div>
+            <div class="col my-auto">
+                {{ form_rest(filter_form) }}
+                {{ form_end(filter_form) }}
+            </div>
+        </div>
+        <br>
+    {% endif %}
+
+    {% if pagerfanta.currentPageResults|length %}
+        <table class="table table-stripped table-sm ">
+            <thead>
+            <tr>
+                {% if app.user.hasRole('ROLE_ADMIN') or app.user.hasRole('ROLE_SUPERVISOR') %}
+                    <th>
+                        <input type="checkbox" name="checkAll" id="checkAllCheckbox">
+                    </th>
+                {% endif %}
+                <th>Номер счёта</th>
+                <th>Дата создания</th>
+                <th>Номер заказа</th>
+                <th>Наименование</th>
+                <th>Получатель</th>
+                <th>Сумма</th>
+                <th>Ссылка</th>
+                <th>Дата оплаты</th>
+                <th>Статус</th>
+                {% if app.user.hasRole('ROLE_ADMIN') or app.user.hasRole('ROLE_SUPERVISOR') %}
+                    <th>Менеджер</th>
+                {% endif %}
+                <th class="min_col"></th>
+            </tr>
+            </thead>
+            <tbody>
+
+
+            {% if app.user.hasRole('ROLE_ADMIN') or app.user.hasRole('ROLE_SUPERVISOR') %}
+                {{ form_start(form) }}
+            {% endif %}
+            {% for invoice in pagerfanta.currentPageResults %}
+                <tr>
+                    {% if app.user.hasRole('ROLE_ADMIN') or app.user.hasRole('ROLE_SUPERVISOR') %}
+                        <td>
+                            {{ form_widget(form.invoices[loop.index0]) }}
+                        </td>
+                    {% endif %}
+                    <td>{{ invoice.id }}</td>
+                    <td>{{ invoice.createdAt|date('Y-m-d H:i:s')  }}</td>
+                    <td>{{ invoice.number }}</td>
+                    <td>{{ invoice.title }}</td>
+                    <td>
+
+                        {% if invoice.phone is not empty %}
+                            <a href="skype:{{ invoice.phone }}?call">{{ invoice.phone }}</a>
+                            <br>
+                        {% endif %}
+
+
+                        {% if invoice.email is not empty %}
+                            <button title="Скопировать в буфер обмена" type="button" data-clipboard="{{ invoice.email }}" class="btn btn-secondary copy-to-clipboard"><i class="fa fa-copy"></i></button>
+                            <a href="mailto:{{ invoice.email }}?subject={{ invoice.title }}&body={{ invoice.uri }}">{{ invoice.email }}</a>
+                        {% endif %}
+                    </td>
+                    <td>{{ invoice.sum }}</td>
+                    <td>
+                            <button title="Скопировать в буфер обмена" type="button" data-clipboard="{{ invoice.uri }}" class="btn btn-secondary copy-to-clipboard"><i class="fa fa-copy"></i></button>
+                            <a data-uri-id="{{ invoice.id }}" target="_blank" href="{{ invoice.uri }}">{{ invoice.uri }}</a>
+                    </td>
+                    <td>
+                        {% if invoice.status == 'Оплачен' %}
+                            {{ invoice.paidAt|date('Y-m-d H:i')}}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if invoice.status=='Оплачен' %}
+                            <i title="Оплачен - заказ оплачен клиентом" class="fa fa-money-bill-alt text-success"></i>
+                        {% endif %}
+
+                        {% if invoice.status=='Не оплачен' %}
+                            <i title="Не оплачен - новый заказ созданный менеджером, ожидает оплаты клиентом" class="fa fa-money-bill-alt text-primary"></i>
+                        {% endif %}
+
+                        {% if invoice.status=='Неудачный' %}
+                            <i title="Неудачный - платеж был отменён клиентом или платёжной системой" class="fa fa-unlink text-warning"></i>
+                        {% endif %}
+
+                        {% if invoice.status=='Удалённый' %}
+                            <i title="Удалённый - заказ удалён менеджером" class="fa fa-trash text-danger"></i>
+                        {% endif %}
+                    </td>
+                    {% if app.user.hasRole('ROLE_ADMIN') or app.user.hasRole('ROLE_SUPERVISOR') %}
+                        <td>{{ invoice.user }}</td>
+                    {% endif %}
+                    <td class="min_col text-right">
+                        {% if app.user.hasRole('ROLE_ADMIN')   %}
+                            <a onclick="return confirm('Удалить совсем из базы данных?');" title="Удалить"  href="{{ path('invoice_delete', { id : invoice.id }) }}"><i class="fa fa-times text-danger"></i></a>&nbsp;&nbsp;
+                        {% endif %}
+
+                        {% if app.user.hasRole('ROLE_SUPERVISOR') and (invoice.status == 'Не оплачен' or invoice.status == 'Неудачный') %}
+                            <a title="Удалить"  href="{{ path('invoice_delete', { id : invoice.id }) }}"><i class="fa fa-times text-danger"></i></a>&nbsp;&nbsp;
+                        {% endif %}
+
+                        {% if invoice.status == 'Не оплачен' %}
+                            <a target="_blank" class="invoice_cancel" title="Отменить" data-uri="{{ invoice.uri }}" href="{{ invoice.uri }}"><i class="fa fa-ban text-danger"></i></a>&nbsp;&nbsp;
+                        {% endif %}
+                        &nbsp;&nbsp;
+
+                        {% if app.user.hasRole('ROLE_ADMIN')  or (not app.user.hasRole('ROLE_ADMIN') and invoice.status == 'Не оплачен') %}
+                            <a  title="Редактировать" href="{{ path('invoice_edit', { id : invoice.id }) }}"><i class="fa fa-edit text-success"></i></a>&nbsp;&nbsp;
+                        {% endif %}
+                           <a  title="Скопировать" href="{{ path('invoice_copy', { id : invoice.id }) }}"><i class="fa fa-copy text-warning"></i></a>
+                        &nbsp;&nbsp;
+                        <a title="Просмотр" href="{{ path('invoice_view', { id : invoice.id }) }}"><i class="fa fa-eye"></i></a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% if app.user.hasRole('ROLE_ADMIN') or app.user.hasRole('ROLE_SUPERVISOR') %}
+            <div class="row">
+                <div class="col-sm-2">
+                    {{ form_rest(form) }}
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        {% endif %}
+
+
+        {% if pagerfanta.haveToPaginate %}
+            <div class="text-center">
+                {{ pagerfanta(pagerfanta, 'twitter_bootstrap4', { prev_message: '←', next_message: '→' }) }}
+            </div>
+        {% endif %}
+    {% else %}
+        Нет данных
+    {% endif %}
+{% endblock content %}
+
+{% block js %}
+<script>
+$(function() {
+    $('#checkAllCheckbox').click(function() {
+        $('input[id^=\'form_invoices\']' ).prop('checked', this.checked);
+    });
+
+    $.each($("input[id^='form_invoices']" ), function () {
+        $(this).change(function() {
+            $('#checkAllCheckbox').prop('checked', false);
+        })
+    });
+
+    $('.copy-to-clipboard').click(function () {
+       var text  = $(this).data('clipboard');
+       copyToClipboard(text);
+    });
+
+    {% if app.request.queryString == '' %}
+        $('#filter').hide();
+    {% endif %}
+
+    $('#filter_link').click(function(e) {
+        e.preventDefault();
+        $('#filter').toggle();
+    });
+});
+</script>
+{% endblock js %}

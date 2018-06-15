@@ -1,0 +1,113 @@
+{% extends 'layout.html.twig' %}
+{% block content %}
+    <a class="btn btn-secondary float-right" href="{{ path('invoice_list') }}"><i class="fa fa-arrow-left"></i>
+        Назад</a>
+
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <h1 class="mt-5">Cчёт</h1>
+            <p class="lead">{{ invoice.number }}</p>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <table class="table table-stripped table-sm">
+                <tr>
+                    <td>Номер счёта</td>
+                    <td>{{ invoice.id }}</td>
+                </tr>
+                <tr>
+                    <td>Дата создания</td>
+                    <td>{{ invoice.createdAt|date('Y-m-d H:i:s') }}</td>
+                </tr>
+                <tr>
+                    <td>Номер заказа</td>
+                    <td>{{ invoice.number }}</td>
+                </tr>
+                <tr>
+                    <td>Наименование</td>
+                    <td>{{ invoice.title }}</td>
+                </tr>
+                <tr>
+                    <td>Получатель</td>
+                    <td>
+
+                        {% if invoice.phone is not empty %}
+                            <a href="skype:{{ invoice.phone }}?call">{{ invoice.phone }}</a><br>
+                        {% endif %}
+
+                        {% if invoice.phone is not empty %}
+                            <a href="mailto:{{ invoice.email }}?subject={{ invoice.title }}&body={{ invoice.uri }}">{{ invoice.email }}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Сумма</td>
+                    <td>{{ invoice.sum }}</td>
+                </tr>
+
+                <tr>
+                    <td>Ссылка</td>
+                    <td>
+                        {% if invoice.uri is not empty %}
+                            <a target="_blank" href="{{ invoice.uri }}">{{ invoice.uri }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Дата оплаты</td>
+                    <td>
+                        {% if invoice.status == 'Оплачен' %}
+                            {{ invoice.paidAt|date('Y-m-d H:i:s') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                        </dd>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Статус</td>
+                    <td>
+                        {% if invoice.status=='Оплачен' %}
+                            <i title="Оплачен - заказ оплаче клиентом" class="fa fa-money-bill-alt text-success"></i>
+                        {% endif %}
+
+                        {% if invoice.status=='Не оплачен' %}
+                            <i title="Не оплачен - новый заказ созданный менеджером, ожидает оплаты клиентом" class="fa fa-money-bill-alt text-primary"></i>
+                        {% endif %}
+
+                        {% if invoice.status=='Неудачный' %}
+                            <i title="Неудачный - платеж был отменен клиентом или платежной системой" class="fa fa-unlink text-warning"></i>
+                        {% endif %}
+
+                        {% if invoice.status=='Удалённый' %}
+                            <i title="Удалённый - заказ удалён менеджером" class="fa fa-trash text-danger"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Комментарий</td>
+                    <td>
+                        {% if invoice.commentary is not empty %}
+                            {{ invoice.commentary }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+
+
+
+
+{% endblock content %}
+
+

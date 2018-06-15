@@ -1,0 +1,57 @@
+{% extends 'layout.html.twig' %}
+{% block content %}
+
+    <a class="btn btn-secondary float-right" href="{{ path('admin_user_create') }}"><i class="fa fa-user-plus"></i> Добавить</a>
+
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <h1 class="mt-5">Пользователи</h1>
+            <p class="lead"></p>
+        </div>
+    </div>
+
+    {% if pagerfanta.currentPageResults|length %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Логин</th>
+                    <th>Электронная почта</th>
+                    <th>Роль</th>
+                    <th class="min_col text-right"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in pagerfanta.currentPageResults %}
+                <tr>
+                    <td>{{ user }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% for role in user.roles %}
+                            {{ roles[role] }}
+                        {% endfor %}
+                    </td>
+                    <td class="min_col text-right">
+                        {% if  app.user.hasRole('ROLE_ADMIN') %}
+                            {% if app.user.id != user.id %}
+                                <a href="{{ path('admin_user_delete', { id : user.id }) }}"><i class="fa fa-times text-danger"></i></a>
+                            {% endif %}
+                             
+                            <a href="{{ path('admin_user_edit', { id : user.id }) }}"><i class="fa fa-edit"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% if pagerfanta.haveToPaginate %}
+            <div class="text-center">
+                {{ pagerfanta(pagerfanta, 'twitter_bootstrap4', { prev_message: '←', next_message: '→' }) }}
+            </div>
+        {% endif %}
+    {% else %}
+        Нет данных
+    {% endif %}
+{% endblock content %}
